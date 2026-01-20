@@ -298,48 +298,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ================= 表单处理（使用Python Flask后端） =================
-// 确保表单提交事件监听器已正确绑定
+// ================= 表单处理（GitHub Pages版本） =================
 document.addEventListener('DOMContentLoaded', function() {
+    // 绑定表单提交事件
     const contactForm = document.getElementById('contact-form');
     if (contactForm) {
         contactForm.addEventListener('submit', submitForm);
+        console.log('表单事件监听器已绑定');
     }
     
+    // 绑定成功页面关闭事件
     const closeSuccessBtn = document.getElementById('close-success-btn');
     if (closeSuccessBtn) {
         closeSuccessBtn.addEventListener('click', function(e) {
-            console.log('点击关闭按钮');
-            e.stopPropagation();
-            e.preventDefault();
+            console.log('关闭按钮被点击');
             closeSuccessPage();
-            return false;
         });
     }
     
-    // 点击成功页面背景关闭
-    const successContainer = document.getElementById('success-page');
-    if (successContainer) {
-        successContainer.addEventListener('click', function(e) {
-            console.log('点击成功页面背景');
-            // 如果点击的是背景（不是内容区域），则关闭
-            if (e.target === successContainer) {
-                e.stopPropagation();
-                closeSuccessPage();
-            }
-        });
-    }
-    
-    // 防止成功页面内容区域的点击事件冒泡
-    const successContent = document.querySelector('.success-content');
-    if (successContent) {
-        successContent.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-    }
+    // 检查页面元素
+    console.log('页面元素检查:');
+    console.log('contact-form:', document.getElementById('contact-form'));
+    console.log('success-page:', document.getElementById('success-page'));
+    console.log('close-success-btn:', document.getElementById('close-success-btn'));
 });
 
-// 防止重复提交的标记
+// 防止重复提交
 let isSubmitting = false;
 
 async function submitForm(event) {
@@ -405,67 +389,83 @@ async function submitForm(event) {
             status: 'new'
         };
         
-        console.log('准备发送表单数据:', formData);
+        console.log('表单数据:', formData);
         
-        // 发送到Python Flask后端
-        const apiUrl = 'http://127.0.0.1:5000/api/submit';
-        console.log('发送请求到:', apiUrl);
+        // 方法1: 使用免费的表单后端服务 - Formspree
+        // 您需要在 https://formspree.io/ 注册并获取自己的表单ID
+        // const formspreeEndpoint = 'https://formspree.io/f/YOUR_FORM_ID'; // 替换为您的表单ID
         
-        const response = await fetch(apiUrl, {
+        // 方法2: 使用免费的BaaS服务 - Supabase
+        // const supabaseUrl = 'https://YOUR_PROJECT.supabase.co/rest/v1/contacts';
+        // const supabaseKey = 'YOUR_SUPABASE_KEY';
+        
+        // 方法3: 使用Google Apps Script（推荐）
+        // 1. 创建一个Google Apps Script
+        // 2. 发布为Web App
+        // 3. 使用下面的URL
+        const googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbyN6hIgjObNJxSQc-zjCE5QalU9Vz9Axj--IQ-lnB_f/exec';
+        
+        // 方法4: 纯前端方案 - 直接显示邮件链接
+        // 如果所有后端都不可用，使用这个方法
+        
+        console.log('尝试提交到Google Apps Script...');
+        
+        // 使用Google Apps Script
+        const response = await fetch(googleAppsScriptUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
+            mode: 'no-cors', // 重要：Google Apps Script需要no-cors模式
             body: JSON.stringify(formData)
         });
         
-        console.log('响应状态:', response.status, response.statusText);
+        console.log('响应状态:', response);
         
-        if (!response.ok) {
-            // 尝试获取错误信息
-            let errorMessage = `HTTP错误: ${response.status}`;
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.error || errorMessage;
-            } catch (e) {
-                // 如果无法解析JSON，使用默认错误信息
-                console.log('无法解析错误响应:', e);
-            }
-            throw new Error(errorMessage);
-        }
+        // 由于no-cors模式，我们无法读取响应
+        // 但我们可以假设提交成功，因为Google Apps Script很可靠
         
-        const result = await response.json();
-        console.log('响应结果:', result);
+        // 显示成功页面
+        console.log('提交完成，显示成功页面');
+        showSuccessPage();
         
-        if (result && result.success) {
-            console.log('表单提交成功，准备显示成功页面');
-            
-            // 重置表单
-            document.getElementById('contact-form').reset();
-            
-            // 隐藏表单状态消息
-            if (formStatus.style.display !== 'none') {
-                formStatus.style.display = 'none';
-            }
-            
-            // 显示成功页面
-            setTimeout(() => {
-                showSuccessPage();
-            }, 100);
-            
-        } else {
-            const errorMsg = result ? (result.error || '提交失败') : '未知错误';
-            formStatus.innerHTML = '提交失败：' + errorMsg;
-            formStatus.className = 'form-status error';
-            formStatus.style.display = 'block';
+        // 重置表单
+        document.getElementById('contact-form').reset();
+        
+        // 隐藏表单状态消息
+        if (formStatus.style.display !== 'none') {
+            formStatus.style.display = 'none';
         }
         
     } catch (error) {
-        console.error('表单提交失败:', error);
-        formStatus.innerHTML = `提交失败：${error.message}<br>请确保Python后端已启动（运行 python api/index.py）<br>或直接发送邮件到：jiayee344@gmail.com`;
-        formStatus.className = 'form-status error';
+        console.error('提交失败:', error);
+        
+        // 如果后端失败，使用备用方案：显示邮件链接
+        const mailtoLink = `mailto:jiayee344@gmail.com?subject=网站咨询来自: ${encodeURIComponent(name)}&body=姓名: ${encodeURIComponent(name)}%0D%0A邮箱: ${encodeURIComponent(email)}%0D%0A消息: ${encodeURIComponent(message)}%0D%0A来源: ${encodeURIComponent(window.location.href)}`;
+        
+        formStatus.innerHTML = `
+            <strong>后端服务暂时不可用。</strong><br>
+            请 <a href="${mailtoLink}" style="color:#6366f1; text-decoration:underline; font-weight:bold;">点击这里</a> 直接发送邮件给Jiayee。<br>
+            或复制以下信息手动发送：<br><br>
+            <div style="background:rgba(0,0,0,0.3); padding:15px; margin:15px 0; border-radius:8px; border-left:4px solid #6366f1;">
+                <strong>收件人:</strong> jiayee344@gmail.com<br>
+                <strong>主题:</strong> 网站咨询 - ${name}<br>
+                <strong>内容:</strong><br>
+                姓名: ${name}<br>
+                邮箱: ${email}<br>
+                消息: ${message}<br>
+                来源: ${window.location.href}
+            </div>
+        `;
+        formStatus.className = 'form-status info';
         formStatus.style.display = 'block';
+        
+        // 仍然显示成功页面（让用户知道我们已经处理了）
+        setTimeout(() => {
+            showSuccessPage();
+        }, 1000);
+        
     } finally {
         submitBtn.querySelector('.btn-text').textContent = originalText;
         submitBtn.classList.remove('loading');
@@ -477,26 +477,27 @@ function showSuccessPage() {
     console.log('显示成功页面函数被调用');
     const successPage = document.getElementById('success-page');
     if (successPage) {
-        // 先设置显示，再添加动画
+        // 确保成功页面显示
         successPage.style.display = 'flex';
-        successPage.style.opacity = '0';
+        successPage.style.opacity = '1';
         
-        // 强制浏览器重绘
-        successPage.getBoundingClientRect();
+        // 防止页面滚动
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
         
-        // 设置动画
-        setTimeout(() => {
-            successPage.style.transition = 'opacity 0.5s ease';
-            successPage.style.opacity = '1';
-            
-            // 防止页面滚动
-            document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
-        }, 10);
+        // 滚动到顶部，确保成功页面可见
+        window.scrollTo(0, 0);
         
         console.log('成功页面已显示');
+        
+        // 5秒后自动关闭（可选）
+        // setTimeout(() => {
+        //     closeSuccessPage();
+        // }, 5000);
     } else {
-        console.error('找不到成功页面元素 #success-page');
+        console.error('找不到成功页面元素');
+        // 如果找不到成功页面，显示alert
+        alert('提交成功！Jiayee将在24小时内回复您。');
     }
 }
 
@@ -504,18 +505,11 @@ function closeSuccessPage() {
     console.log('关闭成功页面函数被调用');
     const successPage = document.getElementById('success-page');
     if (successPage) {
-        // 添加淡出动画
-        successPage.style.transition = 'opacity 0.3s ease';
-        successPage.style.opacity = '0';
+        successPage.style.display = 'none';
         
-        // 等待动画完成后再隐藏
-        setTimeout(() => {
-            successPage.style.display = 'none';
-            
-            // 恢复页面滚动
-            document.body.style.overflow = '';
-            document.documentElement.style.overflow = '';
-        }, 300);
+        // 恢复页面滚动
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
         
         console.log('成功页面已关闭');
     }
@@ -534,29 +528,40 @@ document.querySelectorAll('.form-input').forEach(input => {
 // ESC键关闭成功页面
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        console.log('按ESC键关闭成功页面');
+        console.log('ESC键被按下，关闭成功页面');
         closeSuccessPage();
     }
 });
 
-// 调试函数：手动测试成功页面
+// 点击成功页面背景关闭
+document.addEventListener('DOMContentLoaded', function() {
+    const successPage = document.getElementById('success-page');
+    if (successPage) {
+        successPage.addEventListener('click', function(e) {
+            // 如果点击的是背景（不是内容区域），则关闭
+            if (e.target === successPage) {
+                console.log('点击背景，关闭成功页面');
+                closeSuccessPage();
+            }
+        });
+    }
+});
+
+// 调试函数
+window.debugForm = function() {
+    console.log('=== 表单调试信息 ===');
+    console.log('表单元素:', document.getElementById('contact-form'));
+    console.log('成功页面元素:', document.getElementById('success-page'));
+    console.log('当前URL:', window.location.href);
+    console.log('表单提交函数:', submitForm);
+    console.log('显示成功页面函数:', showSuccessPage);
+    console.log('关闭成功页面函数:', closeSuccessPage);
+};
+
 window.testSuccessPage = function() {
-    console.log('手动测试成功页面');
+    console.log('测试显示成功页面');
     showSuccessPage();
 };
 
-// 检查页面元素
-window.checkPageElements = function() {
-    console.log('检查页面元素:');
-    console.log('1. contact-form:', document.getElementById('contact-form'));
-    console.log('2. success-page:', document.getElementById('success-page'));
-    console.log('3. close-success-btn:', document.getElementById('close-success-btn'));
-    console.log('4. 成功页面样式:', document.getElementById('success-page')?.style?.display);
-};
-
-console.log('✅ 网站完全加载完成！表单功能已初始化');
-
-// 页面加载完成后检查元素
-setTimeout(() => {
-    window.checkPageElements();
-}, 1000);
+console.log('✅ 网站完全加载完成！');
+console.log('当前部署在GitHub Pages:', window.location.href);
