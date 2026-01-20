@@ -267,6 +267,7 @@ def home():
                 <p><strong>状态：</strong> ✅ 服务正常运行中</p>
                 <p><strong>数据文件：</strong> <code>data/contacts.json</code></p>
                 <p><strong>端口：</strong> 5000</p>
+                <p><strong>前端地址：</strong> <code>https://jiaaaaaaaarrrrrrrrr.github.io/landingpage.github.io/</code></p>
             </div>
         </div>
     </body>
@@ -277,7 +278,7 @@ if __name__ == '__main__':
     print("=" * 60)
     print("🚀 启动Jiayee联系表单后端...")
     print("=" * 60)
-    print("🔗 前端访问地址: http://127.0.0.1:5500/index.html")
+    print("🔗 前端访问地址: https://jiaaaaaaaarrrrrrrrr.github.io/landingpage.github.io/")
     print("⚙️  后端访问地址: http://127.0.0.1:5000")
     print("📊 健康检查: http://127.0.0.1:5000/api/health")
     print("💾 数据存储: data/contacts.json")
